@@ -7,6 +7,7 @@ import json
 from PIL import Image
 from io import BytesIO
 import requests
+
 # -----------------------------
 # Define the Pydantic models
 # -----------------------------
