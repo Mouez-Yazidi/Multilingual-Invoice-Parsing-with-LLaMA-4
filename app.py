@@ -58,6 +58,7 @@ if uploaded_file:
         st.subheader("Extracted Invoice Fields")
         if st.button("Extract Invoice Data"):
             with st.spinner("Extracting data using LLaMA 4..."):
+                suffix = uploaded_file.name.split(".")[-1].lower()
                 with tempfile.NamedTemporaryFile(delete=False, suffix=f".{suffix}") as temp_file:
                     temp_file.write(uploaded_file.read())
                     file_path = temp_file.name
