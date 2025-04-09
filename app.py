@@ -6,6 +6,7 @@ from groq import Groq
 import json
 from PIL import Image
 import tempfile
+
 # -----------------------------
 # Define the Pydantic models
 # -----------------------------
@@ -33,8 +34,8 @@ class InvoiceData(BaseModel):
 # Function to encode image
 # -----------------------------
 def encode_image(image_path):
-  with open(image_path, "rb") as image_file:
-    return base64.b64encode(image_file.read()).decode('utf-8')
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
 
 # -----------------------------
 # Streamlit UI
@@ -64,7 +65,10 @@ if uploaded_file:
                     temp_file.write(uploaded_file.read())
                     file_path = temp_file.name
                 base64_image = encode_image(file_path)
-                client = Groq(api_key=st.secrets["GROQ_API_KEY"])  # Replace with your key if needed
+                
+                # Ensure the API key is loaded securely from Streamlit secrets
+                groq_api_key = st.secrets["GROQ_API_KEY"]
+                client = Groq(api_key=groq_api_key)
 
                 prompt = f"""
                 You are an intelligent OCR extraction agent. Given an image of an invoice, extract all relevant information in structured JSON format.
@@ -72,24 +76,24 @@ if uploaded_file:
                 If any field cannot be found in the invoice, return it as null. Focus on clarity and accuracy, and ignore irrelevant text such as watermarks, headers, or decorative elements. Return the final result strictly in JSON format.
                 """
 
-                response = client.chat.completions.create(
-                    model="meta-llama/llama-4-scout-17b-16e-instruct",
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": [
-                                {"type": "text", "text": prompt},
-                                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                            ]
-                        }
-                    ],
-                    temperature=0.4,
-                    max_completion_tokens=1024,
-                    stream=False,
-                    response_format={"type": "json_object"},
-                )
-
                 try:
+                    response = client.chat.completions.create(
+                        model="meta-llama/llama-4-scout-17b-16e-instruct",
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": [
+                                    {"type": "text", "text": prompt},
+                                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                                ]
+                            }
+                        ],
+                        temperature=0.4,
+                        max_completion_tokens=1024,
+                        stream=False,
+                        response_format={"type": "json_object"},
+                    )
+
                     data = json.loads(response.choices[0].message.content)
                     invoice = InvoiceData(**data)
 
