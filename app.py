@@ -61,21 +61,18 @@ class InvoiceData(BaseModel):
         None, description="The currency in which the invoice is issued (e.g., USD, EUR)."
     )
 
-# -----------------------------
-# Function to encode image
-# -----------------------------
-def encode_image(image_path):
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
 
 # -----------------------------
 # Streamlit UI
 # -----------------------------
 st.set_page_config(page_title="Invoice OCR with LLaMA 4", layout="wide")
-st.title("🧾 OCR Invoice Parser using LLaMA 4 (Groq)")
+st.title("🧾 Smarter Invoice Parsing Powered by Llama 4 🦙")
 
 # Image source selection
-input_method = st.radio("Select input method:", ["Upload Image", "Image URL"])
+input_method = st.radio(
+    "Select input method: 📸", 
+    ["Upload Image 📤", "Image URL 🌐"]
+)
 
 image_source = None
 image_url = None
