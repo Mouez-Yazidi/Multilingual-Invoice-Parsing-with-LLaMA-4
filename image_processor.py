@@ -25,6 +25,6 @@ def process_image_url(image_url):
 def display_image_preview(image_bytes):
     try:
         image = Image.open(BytesIO(image_bytes))
-        st.image(image, use_column_width=True)
+        st.image(image)
     except Exception as e:
         st.error(f"Error displaying image: {str(e)}")
