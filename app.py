@@ -64,6 +64,7 @@ if uploaded_file:
                 with tempfile.NamedTemporaryFile(delete=False, suffix=f".{suffix}") as temp_file:
                     temp_file.write(uploaded_file.read())
                     file_path = temp_file.name
+                    print(f'**************{file_path})
                 base64_image = encode_image(file_path)
                 
                 # Ensure the API key is loaded securely from Streamlit secrets
@@ -71,7 +72,8 @@ if uploaded_file:
                 client = Groq(api_key=groq_api_key)
 
                 prompt = f"""
-                You are an intelligent OCR extraction agent. Given an image of an invoice, extract all relevant information in structured JSON format.
+                You are an intelligent OCR extraction agent capable of understanding and processing documents in multiple languages.
+                Given an image of an invoice, extract all relevant information in structured JSON format.
                 The JSON object must use the schema: {json.dumps(InvoiceData.model_json_schema(), indent=2)}
                 If any field cannot be found in the invoice, return it as null. Focus on clarity and accuracy, and ignore irrelevant text such as watermarks, headers, or decorative elements. Return the final result strictly in JSON format.
                 """
