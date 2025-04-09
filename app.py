@@ -64,7 +64,7 @@ if uploaded_file:
                 with tempfile.NamedTemporaryFile(delete=False, suffix=f".{suffix}") as temp_file:
                     temp_file.write(uploaded_file.read())
                     file_path = temp_file.name
-                    print(f'**************{file_path}')
+                print(f'**************{file_path}')
                 base64_image = encode_image(file_path)
                 
                 # Ensure the API key is loaded securely from Streamlit secrets
