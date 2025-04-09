@@ -78,7 +78,7 @@ image_url = None
 image_bytes = None
 mime_type = "image/jpeg"
 
-if input_method == "Upload Image":
+if input_method == "Upload Image 📤":
     uploaded_file = st.file_uploader("Upload an invoice image", type=["png", "jpg", "jpeg"])
     if uploaded_file:
         image_bytes = uploaded_file.read()
@@ -88,7 +88,7 @@ if input_method == "Upload Image":
         elif suffix in ("jpg", "jpeg"):
             mime_type = "image/jpeg"
 
-elif input_method == "Image URL":
+elif input_method == "Image URL 🌐":
     image_url = st.text_input("Enter image URL:")
     if image_url:
         try:
