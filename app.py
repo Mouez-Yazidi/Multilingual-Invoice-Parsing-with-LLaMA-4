@@ -74,20 +74,35 @@ def encode_image(image_path):
 st.set_page_config(page_title="Invoice OCR with LLaMA 4", layout="wide")
 st.title("🧾 OCR Invoice Parser using LLaMA 4 (Groq)")
 
-uploaded_file = st.file_uploader("Upload an invoice image", type=["png", "jpg", "jpeg"])
+# Image source selection
+input_method = st.radio("Select input method:", ["Upload Image", "Image URL"])
 
-if uploaded_file:
-    # Read image bytes once
-    image_bytes = uploaded_file.read()
-    
-    # Get MIME type from file extension
-    suffix = uploaded_file.name.split(".")[-1].lower()
-    mime_type = "image/jpeg"  # default
-    if suffix == "png":
-        mime_type = "image/png"
-    elif suffix in ("jpg", "jpeg"):
-        mime_type = "image/jpeg"
+image_source = None
+image_url = None
+image_bytes = None
+mime_type = "image/jpeg"
 
+if input_method == "Upload Image":
+    uploaded_file = st.file_uploader("Upload an invoice image", type=["png", "jpg", "jpeg"])
+    if uploaded_file:
+        image_bytes = uploaded_file.read()
+        suffix = uploaded_file.name.split(".")[-1].lower()
+        if suffix == "png":
+            mime_type = "image/png"
+        elif suffix in ("jpg", "jpeg"):
+            mime_type = "image/jpeg"
+
+elif input_method == "Image URL":
+    image_url = st.text_input("Enter image URL:")
+    if image_url:
+        try:
+            response = requests.get(image_url)
+            response.raise_for_status()
+            image_bytes = response.content  # For display only
+        except Exception as e:
+            st.error(f"Error loading image from URL: {str(e)}")
+
+if image_bytes:
     # Layout with columns
     col1, col2 = st.columns([1, 2])
 
@@ -96,7 +111,7 @@ if uploaded_file:
         st.subheader("Invoice Image")
         try:
             image = Image.open(BytesIO(image_bytes))
-            st.image(image, caption="Uploaded Invoice")
+            st.image(image, caption="Uploaded Invoice" if input_method == "Upload Image" else "Image from URL")
         except Exception as e:
             st.error(f"Error displaying image: {str(e)}")
 
@@ -106,9 +121,6 @@ if uploaded_file:
         if st.button("Extract Invoice Data"):
             with st.spinner("Extracting data using LLaMA 4..."):
                 try:
-                    # Encode image directly from bytes
-                    base64_image = base64.b64encode(image_bytes).decode("utf-8")
-                    
                     # Ensure the API key is loaded securely from Streamlit secrets
                     groq_api_key = st.secrets["GROQ_API_KEY"]
                     client = Groq(api_key=groq_api_key)
@@ -120,6 +132,23 @@ if uploaded_file:
                     If any field cannot be found in the invoice, return it as null. Focus on clarity and accuracy, and ignore irrelevant text such as watermarks, headers, or decorative elements. Return the final result strictly in JSON format.
                     """
 
+                    # Prepare the image content based on input method
+                    if input_method == "Upload Image":
+                        base64_image = base64.b64encode(image_bytes).decode("utf-8")
+                        image_content = {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{mime_type};base64,{base64_image}"
+                            }
+                        }
+                    else:  # Image URL case
+                        image_content = {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": image_url
+                            }
+                        }
+
                     response = client.chat.completions.create(
                         model="meta-llama/llama-4-scout-17b-16e-instruct",
                         messages=[
@@ -127,9 +156,7 @@ if uploaded_file:
                                 "role": "user",
                                 "content": [
                                     {"type": "text", "text": prompt},
-                                    {"type": "image_url", "image_url": {
-                                        "url": f"data:{mime_type};base64,{base64_image}"
-                                    }}
+                                    image_content
                                 ]
                             }
                         ],
@@ -145,5 +172,7 @@ if uploaded_file:
                     st.success("✅ Data extracted successfully!")
                     st.json(invoice.dict())
 
+                except Exception as e:
+                    st.error(f"❌ Failed to parse invoice: {str(e)}")
                 except Exception as e:
                     st.error(f"❌ Failed to parse invoice: {str(e)}")
