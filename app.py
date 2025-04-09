@@ -67,13 +67,10 @@ class InvoiceData(BaseModel):
 # Streamlit UI
 # -----------------------------
 st.set_page_config(page_title="Invoice OCR with LLaMA 4", layout="wide")
-st.title("🧾 Smarter Invoice Parsing Powered by Llama 4 🦙")
+st.title("🧾 OCR Invoice Parser using LLaMA 4 (Groq)")
 
 # Image source selection
-input_method = st.radio(
-    "Select input method: 📸", 
-    ["Upload Image 📤", "Image URL 🌐"]
-)
+input_method = st.radio("Select input method: 📸", ["Upload Image 📤", "Image URL 🌐"])
 
 image_source = None
 image_url = None
@@ -170,7 +167,5 @@ if image_bytes:
                     st.success("✅ Data extracted successfully!")
                     st.json(invoice.dict())
 
-                except Exception as e:
-                    st.error(f"❌ Failed to parse invoice: {str(e)}")
                 except Exception as e:
                     st.error(f"❌ Failed to parse invoice: {str(e)}")
