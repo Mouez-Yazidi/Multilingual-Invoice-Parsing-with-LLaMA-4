@@ -5,8 +5,7 @@ import base64
 from groq import Groq
 import json
 from PIL import Image
-import tempfile
-import logging
+from io import BytesIO
 # -----------------------------
 # Define the Pydantic models
 # -----------------------------
