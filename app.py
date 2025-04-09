@@ -58,7 +58,10 @@ if uploaded_file:
         st.subheader("Extracted Invoice Fields")
         if st.button("Extract Invoice Data"):
             with st.spinner("Extracting data using LLaMA 4..."):
-                base64_image = encode_image(uploaded_file)
+                with tempfile.NamedTemporaryFile(delete=False, suffix=f".{suffix}") as temp_file:
+                    temp_file.write(uploaded_file.read())
+                    file_path = temp_file.name
+                base64_image = encode_image(file_path)
                 client = Groq(api_key=st.secrets["GROQ_API_KEY"])  # Replace with your key if needed
 
                 prompt = f"""
