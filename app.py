@@ -11,24 +11,56 @@ import logging
 # Define the Pydantic models
 # -----------------------------
 class LineItem(BaseModel):
-    description: Optional[str] = Field(None)
-    quantity: Optional[float] = Field(None)
-    unit_price: Optional[float] = Field(None)
-    total_price: Optional[float] = Field(None)
+    description: Optional[str] = Field(
+        None, description="A brief description of the product or service provided."
+    )
+    quantity: Optional[float] = Field(
+        None, description="The number of units of the product or service."
+    )
+    unit_price: Optional[float] = Field(
+        None, description="The price per unit of the product or service."
+    )
+    total_price: Optional[float] = Field(
+        None, description="The total price for the line item, calculated as quantity × unit price."
+    )
 
 class InvoiceData(BaseModel):
-    invoice_number: Optional[str] = Field(None)
-    invoice_date: Optional[str] = Field(None)
-    due_date: Optional[str] = Field(None)
-    billing_address: Optional[str] = Field(None)
-    shipping_address: Optional[str] = Field(None)
-    vendor_name: Optional[str] = Field(None)
-    customer_name: Optional[str] = Field(None)
-    line_items: Optional[List[LineItem]] = Field(None)
-    subtotal: Optional[float] = Field(None)
-    tax: Optional[float] = Field(None)
-    total_amount: Optional[float] = Field(None)
-    currency: Optional[str] = Field(None)
+    invoice_number: Optional[str] = Field(
+        None, description="The unique identifier or reference number of the invoice."
+    )
+    invoice_date: Optional[str] = Field(
+        None, description="The date when the invoice was issued."
+    )
+    due_date: Optional[str] = Field(
+        None, description="The payment due date."
+    )
+    billing_address: Optional[str] = Field(
+        None, description="The address of the customer who is being billed."
+    )
+    shipping_address: Optional[str] = Field(
+        None, description="The address where the goods/services are to be delivered."
+    )
+    vendor_name: Optional[str] = Field(
+        None, description="The name of the company or individual issuing the invoice."
+    )
+    customer_name: Optional[str] = Field(
+        None, description="The name of the person or organization being billed."
+    )
+    line_items: Optional[List[LineItem]] = Field(
+        None, description="A list of items described in the invoice."
+    )
+    subtotal: Optional[float] = Field(
+        None, description="The sum of all line item totals before taxes or additional fees."
+    )
+    tax: Optional[float] = Field(
+        None, description="The tax amount applied to the subtotal."
+    )
+    total_amount: Optional[float] = Field(
+        None, description="The final total to be paid including subtotal and taxes."
+    )
+    currency: Optional[str] = Field(
+        None, description="The currency in which the invoice is issued (e.g., USD, EUR)."
+    )
 
 # -----------------------------
 # Function to encode image
@@ -46,39 +78,49 @@ st.title("🧾 OCR Invoice Parser using LLaMA 4 (Groq)")
 uploaded_file = st.file_uploader("Upload an invoice image", type=["png", "jpg", "jpeg"])
 
 if uploaded_file:
+    # Read image bytes once
+    image_bytes = uploaded_file.read()
+    
+    # Get MIME type from file extension
+    suffix = uploaded_file.name.split(".")[-1].lower()
+    mime_type = "image/jpeg"  # default
+    if suffix == "png":
+        mime_type = "image/png"
+    elif suffix in ("jpg", "jpeg"):
+        mime_type = "image/jpeg"
+
     # Layout with columns
     col1, col2 = st.columns([1, 2])
 
     # Left column: Show image
     with col1:
         st.subheader("Invoice Image")
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Invoice")
+        try:
+            image = Image.open(BytesIO(image_bytes))
+            st.image(image, caption="Uploaded Invoice")
+        except Exception as e:
+            st.error(f"Error displaying image: {str(e)}")
 
     # Right column: Process and show extracted fields
     with col2:
         st.subheader("Extracted Invoice Fields")
         if st.button("Extract Invoice Data"):
             with st.spinner("Extracting data using LLaMA 4..."):
-                suffix = uploaded_file.name.split(".")[-1].lower()
-                with tempfile.NamedTemporaryFile(delete=False, suffix=f".{suffix}") as temp_file:
-                    temp_file.write(uploaded_file.read())
-                    file_path = temp_file.name
-                logging.info(f'**************{file_path}')
-                base64_image = encode_image(file_path)
-                
-                # Ensure the API key is loaded securely from Streamlit secrets
-                groq_api_key = st.secrets["GROQ_API_KEY"]
-                client = Groq(api_key=groq_api_key)
-
-                prompt = f"""
-                You are an intelligent OCR extraction agent capable of understanding and processing documents in multiple languages.
-                Given an image of an invoice, extract all relevant information in structured JSON format.
-                The JSON object must use the schema: {json.dumps(InvoiceData.model_json_schema(), indent=2)}
-                If any field cannot be found in the invoice, return it as null. Focus on clarity and accuracy, and ignore irrelevant text such as watermarks, headers, or decorative elements. Return the final result strictly in JSON format.
-                """
-
                 try:
+                    # Encode image directly from bytes
+                    base64_image = base64.b64encode(image_bytes).decode("utf-8")
+                    
+                    # Ensure the API key is loaded securely from Streamlit secrets
+                    groq_api_key = st.secrets["GROQ_API_KEY"]
+                    client = Groq(api_key=groq_api_key)
+
+                    prompt = f"""
+                    You are an intelligent OCR extraction agent capable of understanding and processing documents in multiple languages.
+                    Given an image of an invoice, extract all relevant information in structured JSON format.
+                    The JSON object must use the schema: {json.dumps(InvoiceData.model_json_schema(), indent=2)}
+                    If any field cannot be found in the invoice, return it as null. Focus on clarity and accuracy, and ignore irrelevant text such as watermarks, headers, or decorative elements. Return the final result strictly in JSON format.
+                    """
+
                     response = client.chat.completions.create(
                         model="meta-llama/llama-4-scout-17b-16e-instruct",
                         messages=[
@@ -86,7 +128,9 @@ if uploaded_file:
                                 "role": "user",
                                 "content": [
                                     {"type": "text", "text": prompt},
-                                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                                    {"type": "image_url", "image_url": {
+                                        "url": f"data:{mime_type};base64,{base64_image}"
+                                    }}
                                 ]
                             }
                         ],
