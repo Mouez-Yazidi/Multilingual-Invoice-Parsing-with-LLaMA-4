@@ -52,7 +52,7 @@ if uploaded_file:
     with col1:
         st.subheader("Invoice Image")
         image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Invoice", use_column_width=True)
+        st.image(image, caption="Uploaded Invoice")
 
     # Right column: Process and show extracted fields
     with col2:
