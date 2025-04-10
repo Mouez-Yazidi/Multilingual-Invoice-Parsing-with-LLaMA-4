@@ -1,10 +1,17 @@
 import streamlit as st
 import json
 import base64
-from models import InvoiceData
-from image_processor import process_image_upload, process_image_url, display_image_preview
-from groq_client import GroqClient
-from ui import setup_page, select_input_method, show_extraction_button, display_results, display_error
+from utils import InvoiceData, GroqClient
+from utils import (
+    process_image_upload,
+    process_image_url,
+    display_image_preview,
+    setup_page,
+    select_input_method,
+    show_extraction_button,
+    display_results,
+    display_error,
+)
 
 def main():
     setup_page()
