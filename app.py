@@ -14,6 +14,29 @@ from utils import (
 )
 
 def main():
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Run the Streamlit app.')
+    parser.add_argument('--environment', 
+                        type=str, 
+                        choices=['local', 'cloud'], 
+                        default='cloud',
+                        help='Specify the environment: "local" or "cloud".')
+    args = parser.parse_args()
+    
+    if args.environment == 'cloud':
+        # Access secret values
+        groq_api_key = st.secrets["GROQ_API_KEY"]
+    else:
+        from dotenv import load_dotenv
+        load_dotenv()
+        # Access secret values
+        groq_api_key = os.getenv("GROQ_API_KEY")    
+
+    # Store secrets in session_state
+    #groqcloud
+    if "groq_api_key" not in st.session_state:
+        st.session_state.groq_api_key = groq_api_key
+
     setup_page()
     input_method = select_input_method()
     
@@ -43,7 +66,7 @@ def main():
             if show_extraction_button():
                 with st.spinner("Extracting data using LLaMA 4..."):
                     try:
-                        groq_client = GroqClient(api_key=st.secrets["GROQ_API_KEY"])
+                        groq_client = GroqClient(api_key=st.session_state.groq_api_key)
                         
                         prompt = f"""
                         You are an intelligent OCR extraction agent capable of understanding and processing documents in multiple languages.
