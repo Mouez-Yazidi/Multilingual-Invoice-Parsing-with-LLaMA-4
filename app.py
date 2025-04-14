@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 import base64
+import argparse
 from utils import InvoiceData, GroqClient
 from utils import (
     process_image_upload,
