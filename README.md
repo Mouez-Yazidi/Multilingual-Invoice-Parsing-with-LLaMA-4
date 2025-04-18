@@ -7,6 +7,8 @@ This project demonstrates how **Meta's LLaMA 4** is revolutionizing **OCR and do
 
 The model excels in parsing invoices in multiple languages, including **English**, **French**, and **Arabic**, ensuring **accurate** and **reliable** outputs. This project showcases **LLaMA 4** as a powerful tool for **intelligent document processing**, paving the way for smarter, **AI-driven automation** in various industries.
 
+👀 Curious how it works? Dive into the full story here: https://medium.com/towards-artificial-intelligence/multilingual-invoice-parsing-project-with-llama-4-ocr-and-python-4649a62ba2dc 
+
 # Invoice Parsing Results
 
 Below are the results from parsing three invoices:
